@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChanakyaAlpha // Graham-Buffett Value & Macro Terminal (India)</title>
+
+  <!-- Clean Console Warnings -->
+  <script>
+    const origWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+      origWarn.apply(console, args);
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            terminal: {
+              black: '#0a0d14',
+              surface: '#111726',
+              border: '#1f293d',
+              card: '#161f33',
+              accent: '#38bdf8',
+              gold: '#f59e0b',
+              bull: '#10b981',
+              bear: '#ef4444',
+              muted: '#64748b'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #080b11;
+      color: #e2e8f0;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0d1321;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1f293d;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+
+<body class="font-sans antialiased text-xs md:text-sm selection:bg-terminal-accent/30 selection:text-white min-h-screen flex flex-col">
+
+  <!-- Top Marquee Ticker -->
+  <div class="bg-terminal-black border-b border-terminal-border/80 px-4 py-1.5 flex items-center justify-between font-mono text-[11px] overflow-hidden whitespace-nowrap">
+    <div class="flex items-center space-x-6 animate-pulse">
+      <span class="text-terminal-accent font-semibold flex items-center gap-1">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-terminal-accent"></span> VALUE // MACRO RADAR
+      </span>
+      <span class="text-slate-400">BENJAMIN GRAHAM: "Margin of safety is the secret of sound investment."</span>
+      <span class="text-slate-500">|</span>
+      <span class="text-terminal-bull">INDIA 10Y BOND YIELD: 6.82%</span>
+      <span class="text-slate-500">|</span>
+      <span class="text-slate-300">NIFTY P/E: 22.1x (Fair)</span>
+      <span class="text-slate-500">|</span>
+      <span class="text-terminal-gold">MR. MARKET TEMPERAMENT: Calibrated Rationalism</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Live Backend Status Pill -->
+      <span id="backend-status-pill" class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px]">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        <span id="backend-status-text">Using Local Mock Data</span>
+      </span>
+      <button onclick="fetchLiveData()" class="hover:text-terminal-accent text-slate-400 text-[10px] underline cursor-pointer">
+        Sync Python Server
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="bg-terminal-surface border-b border-terminal-border px-4 py-3 sticky top-0 z-40">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Version -->
+      <div class="flex items-center space-x-3">
+        <div class="bg-gradient-to-br from-sky-500 to-indigo-600 p-2 rounded-lg text-white font-mono font-bold text-base shadow-lg shadow-sky-500/20">
+          Ch
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base md:text-lg font-mono font-bold tracking-tight text-white">CHANAKYA.VALUE</h1>
+            <span class="bg-terminal-gold/20 text-terminal-gold border border-terminal-gold/40 text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">
+              Graham-Buffett Engine
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Macro Intelligence • Economic Moat • Margin of Safety • Graham Number</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="toggleModal('info-modal')" class="px-3 py-1.5 rounded bg-terminal-card hover:bg-slate-800 border border-terminal-border text-slate-300 font-mono text-xs flex items-center gap-1.5 transition">
+          <i data-lucide="help-circle" class="w-3.5 h-3.5 text-terminal-accent"></i>
+          <span>Value Guardrails</span>
+        </button>
+        <button onclick="toggleModal('scenario-modal')" class="px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-mono text-xs flex items-center gap-1.5 transition">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Inject Macro Shock</span>
+        </button>
+        <button onclick="toggleModal('dcf-modal')" class="px-3 py-1.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 font-mono text-xs flex items-center gap-1.5 transition">
+          <i data-lucide="calculator" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span>DCF Calculator</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sub-Header Strategy Presets -->
+  <div class="bg-terminal-card/60 border-b border-terminal-border/60 px-4 py-2">
+    <div class="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Value Strategy:</span>
+        <button onclick="setStrategy('all')" id="btn-strat-all" class="strat-btn px-2.5 py-1 rounded text-xs font-medium bg-terminal-surface border border-terminal-border text-slate-300 hover:border-terminal-accent transition">All Universe</button>
+        <button onclick="setStrategy('graham')" id="btn-strat-graham" class="strat-btn px-2.5 py-1 rounded text-xs font-medium bg-terminal-surface border border-terminal-border text-slate-300 hover:border-terminal-accent transition">Graham Defensive (MoS > 25%)</button>
+        <button onclick="setStrategy('buffett')" id="btn-strat-buffett" class="strat-btn px-2.5 py-1 rounded text-xs font-medium bg-terminal-surface border border-terminal-border text-slate-300 hover:border-terminal-accent transition">Buffett Wide Moat (ROCE > 20%)</button>
+        <button onclick="setStrategy('garp')" id="btn-strat-garp" class="strat-btn px-2.5 py-1 rounded text-xs font-medium bg-terminal-surface border border-terminal-border text-slate-300 hover:border-terminal-accent transition">GARP + Macro Tailwind</button>
+        <button onclick="setStrategy('deepvalue')" id="btn-strat-deepvalue" class="strat-btn px-2.5 py-1 rounded text-xs font-medium bg-terminal-surface border border-terminal-border text-slate-300 hover:border-terminal-accent transition">Deep Value / Cyclical Low</button>
+      </div>
+      <div class="text-[11px] font-mono text-slate-400 flex items-center gap-3">
+        <span>Graham Safety Formula: <strong class="text-white">P/E × P/B &le; 22.5</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace Container -->
+  <main class="max-w-[1600px] mx-auto p-4 flex-1 space-y-4 w-full">
+
+    <!-- Top Grid: Guardrails & Sector Vector -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+      <!-- Value Guardrails Card (4 cols) -->
+      <div class="lg:col-span-4 bg-terminal-card border border-terminal-border rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-mono font-bold tracking-wider uppercase text-terminal-accent flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-4 h-4"></i> Margin of Safety Guardrails
+            </h2>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Active Filters</span>
+          </div>
+          <p class="text-slate-400 text-xs leading-relaxed mb-3">
+            Filtering for deep discounts to intrinsic valuation, strong balance sheets, and competitive moats resistant to inflation.
+          </p>
+          <div class="space-y-2 font-mono text-[11px]">
+            <div class="flex justify-between py-1 border-b border-terminal-border/50">
+              <span class="text-slate-400">Graham Multiple:</span>
+              <span class="text-slate-200">Trailing P/E &times; P/B &le; 22.5</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-terminal-border/50">
+              <span class="text-slate-400">Return on Capital:</span>
+              <span class="text-terminal-bull">ROCE &gt; 18% consistently</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-terminal-border/50">
+              <span class="text-slate-400">Solvency Cushion:</span>
+              <span class="text-slate-200">Interest Coverage &gt; 5.0x / Low D/E</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-slate-400">Owner Earnings:</span>
+              <span class="text-slate-200">Positive Free Cash Flow Yield</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-terminal-border/70 flex items-center justify-between text-[11px] font-mono">
+          <span class="text-slate-400">Universe Evaluated:</span>
+          <span id="active-ticker-count" class="font-bold text-white">10 Stocks</span>
+        </div>
+      </div>
+
+      <!-- Sector Tailwind Matrix (8 cols) -->
+      <div class="lg:col-span-8 bg-terminal-card border border-terminal-border rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-mono font-bold tracking-wider uppercase text-terminal-accent flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-4 h-4"></i> Sector Tailwind & Policy Vector (India)
+          </h2>
+          <span class="text-[10px] text-slate-400 font-mono">Click a sector to filter stocks</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="sector-matrix-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar & Screener Controls -->
+    <div class="bg-terminal-card border border-terminal-border rounded-lg p-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+        
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- MoS Select -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-slate-400">Min MoS:</label>
+            <select id="filter-mos" onchange="applyFilters()" class="bg-terminal-surface border border-terminal-border rounded px-2 py-1 text-white focus:outline-none focus:border-terminal-accent">
+              <option value="0">Any MoS</option>
+              <option value="15">MoS &gt; 15%</option>
+              <option value="25">MoS &gt; 25% (Defensive)</option>
+              <option value="40">MoS &gt; 40% (Deep Value)</option>
+            </select>
+          </div>
+
+          <!-- Economic Moat Select -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-slate-400">Economic Moat:</label>
+            <select id="filter-moat" onchange="applyFilters()" class="bg-terminal-surface border border-terminal-border rounded px-2 py-1 text-white focus:outline-none focus:border-terminal-accent">
+              <option value="all">Any Moat</option>
+              <option value="Wide">Wide Moat Only</option>
+              <option value="Narrow">Narrow or Wide</option>
+            </select>
+          </div>
+
+          <!-- Max PEG -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-slate-400">Max PEG:</label>
+            <select id="filter-peg" onchange="applyFilters()" class="bg-terminal-surface border border-terminal-border rounded px-2 py-1 text-white focus:outline-none focus:border-terminal-accent">
+              <option value="999">Any PEG</option>
+              <option value="1.0">PEG &le; 1.0 (Peter Lynch)</option>
+              <option value="1.5">PEG &le; 1.5 (Fair Growth)</option>
+            </select>
+          </div>
+
+          <!-- Piotroski F-Score -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-slate-400">Min F-Score:</label>
+            <select id="filter-piotroski" onchange="applyFilters()" class="bg-terminal-surface border border-terminal-border rounded px-2 py-1 text-white focus:outline-none focus:border-terminal-accent">
+              <option value="0">Any F-Score</option>
+              <option value="6">&ge; 6 (Healthy)</option>
+              <option value="8">&ge; 8 (Institutional High Quality)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <div class="relative flex-1 sm:w-64">
+            <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Search ticker, name, or moat..." class="w-full bg-terminal-surface border border-terminal-border rounded px-2.5 py-1 pl-7 text-white placeholder-slate-500 focus:outline-none focus:border-terminal-accent font-sans text-xs" />
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2"></i>
+          </div>
+          <button onclick="resetFilters()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Workspace Split: Macro Feed (30%) + Screener Table (70%) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+      <!-- Left: Macro & Monetary News Intelligence (4 cols) -->
+      <div class="lg:col-span-4 space-y-3">
+        <div class="bg-terminal-card border border-terminal-border rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-xs font-mono font-bold tracking-wider uppercase text-terminal-accent flex items-center gap-1.5">
+              <i data-lucide="radio" class="w-4 h-4 text-rose-500"></i> Macro & Regulatory Stream
+            </h2>
+            <div class="flex gap-1">
+              <button onclick="filterFeed('all')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">All</button>
+              <button onclick="filterFeed('monetary')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">Monetary</button>
+              <button onclick="filterFeed('fiscal')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">Fiscal</button>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-3">
+            Real-time policy shifts mapped directly to sector discount rates and earnings multipliers.
+          </p>
+
+          <!-- Feed Container -->
+          <div id="macro-feed-list" class="space-y-2.5 max-h-[640px] overflow-y-auto pr-1 custom-scrollbar">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Value Investment & Stock Ranking Terminal (8 cols) -->
+      <div class="lg:col-span-8 bg-terminal-card border border-terminal-border rounded-lg p-4 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-xs font-mono font-bold tracking-wider uppercase text-white flex items-center gap-1.5">
+              <i data-lucide="table" class="w-4 h-4 text-emerald-400"></i> Value Screener & Synthesis Output
+            </h2>
+            <p class="text-[11px] text-slate-400">Ranked by Composite Value Score (Margin of Safety + Moat Durability + Macro Vector)</p>
+          </div>
+          <div class="text-[11px] font-mono text-slate-400">
+            Matching: <span id="matching-stocks-count" class="text-terminal-accent font-bold">10</span> / <span id="total-stocks-count">10</span>
+          </div>
+        </div>
+
+        <!-- Stock Table -->
+        <div class="overflow-x-auto custom-scrollbar border border-terminal-border rounded">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="bg-terminal-surface border-b border-terminal-border text-slate-400 text-[11px]">
+                <th class="p-2.5">Company / Moat</th>
+                <th class="p-2.5">CMP (₹)</th>
+                <th class="p-2.5">Graham No.</th>
+                <th class="p-2.5">MoS %</th>
+                <th class="p-2.5">P/E vs Med</th>
+                <th class="p-2.5">ROCE / FCF</th>
+                <th class="p-2.5">F-Score</th>
+                <th class="p-2.5">Synthesis Score</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="stock-table-body" class="divide-y divide-terminal-border/60">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Terminal Footer Notes -->
+        <div class="mt-4 pt-3 border-t border-terminal-border/60 flex flex-wrap items-center justify-between text-[11px] text-slate-400 font-mono gap-2">
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Strong Buy (MoS &gt; 30% + Wide Moat)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-500"></span> Accumulate (Fair Value / Quality)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Overextended / Trim</span>
+          </div>
+          <div>Formulas: Graham = &radic;(22.5 &times; EPS &times; BVPS)</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Stock Thesis & Deep Analysis Modal -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-terminal-card border border-terminal-border max-w-2xl w-full rounded-lg shadow-2xl overflow-hidden font-mono flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3 border-b border-terminal-border flex items-center justify-between bg-terminal-surface">
+        <div>
+          <h3 id="modal-company-title" class="text-sm font-bold text-white">TICKER // Analysis</h3>
+          <p id="modal-company-sub" class="text-[11px] text-slate-400">Sector • Intrinsic Value Breakdown</p>
+        </div>
+        <button onclick="toggleModal('detail-modal')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar text-xs">
+        
+        <!-- Score Bar Summary -->
+        <div class="grid grid-cols-3 gap-3 bg-terminal-surface p-3 rounded border border-terminal-border">
+          <div>
+            <div class="text-[10px] text-slate-400">Margin of Safety</div>
+            <div id="modal-mos-val" class="text-sm font-bold text-emerald-400">+28.4%</div>
+          </div>
+          <div>
+            <div class="text-[10px] text-slate-400">Piotroski Health</div>
+            <div id="modal-piotroski-val" class="text-sm font-bold text-white">8 / 9</div>
+          </div>
+          <div>
+            <div class="text-[10px] text-slate-400">Owner Earnings Yield</div>
+            <div id="modal-fcf-val" class="text-sm font-bold text-sky-400">6.2%</div>
+          </div>
+        </div>
+
+        <!-- Graham & DCF Valuation Breakdown -->
+        <div class="space-y-1.5">
+          <h4 class="text-terminal-accent text-[11px] font-bold uppercase tracking-wider">Intrinsic Valuation Checklist</h4>
+          <div class="grid grid-cols-2 gap-2 text-[11px] bg-terminal-black/50 p-2.5 rounded border border-terminal-border">
+            <div>Current Price: <span id="modal-cmp" class="text-white font-bold">₹0.00</span></div>
+            <div>Graham Number: <span id="modal-graham" class="text-white font-bold">₹0.00</span></div>
+            <div>DCF Intrinsic Fair Value: <span id="modal-dcf" class="text-emerald-400 font-bold">₹0.00</span></div>
+            <div>5Y Historical Median P/E: <span id="modal-median-pe" class="text-white">18.5x</span></div>
+          </div>
+        </div>
+
+        <!-- Buy Catalyst (The Why) -->
+        <div>
+          <h4 class="text-terminal-bull text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Why Buy (Value Thesis & Catalysts)
+          </h4>
+          <p id="modal-buy-catalyst" class="text-slate-300 leading-relaxed mt-1 font-sans bg-emerald-950/20 p-2.5 rounded border border-emerald-500/20">
+            Thesis text
+          </p>
+        </div>
+
+        <!-- Sell Trigger (Risk & Exit Conditions) -->
+        <div>
+          <h4 class="text-terminal-bear text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> When to Sell (Exit Triggers & Risks)
+          </h4>
+          <p id="modal-sell-trigger" class="text-slate-300 leading-relaxed mt-1 font-sans bg-rose-950/20 p-2.5 rounded border border-rose-500/20">
+            Exit conditions text
+          </p>
+        </div>
+
+        <!-- Moat Verification -->
+        <div>
+          <h4 class="text-terminal-gold text-[11px] font-bold uppercase tracking-wider">Moat Durability & Competitive Advantage</h4>
+          <p id="modal-moat-desc" class="text-slate-400 leading-relaxed mt-1 font-sans">
+            Competitive moat description
+          </p>
+        </div>
+
+      </div>
+
+      <div class="px-5 py-2.5 border-t border-terminal-border bg-terminal-surface flex justify-end">
+        <button onclick="toggleModal('detail-modal')" class="px-4 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs">
+          Close Analysis
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Macro Shock Simulator Modal -->
+  <div id="scenario-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-terminal-card border border-terminal-border max-w-lg w-full rounded-lg shadow-2xl overflow-hidden font-mono">
+      <div class="px-4 py-3 border-b border-terminal-border flex items-center justify-between bg-terminal-surface">
+        <div class="flex items-center gap-2">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Inject Macro Shock Event</h3>
+        </div>
+        <button onclick="toggleModal('scenario-modal')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <p class="text-slate-400">Select a real-world macroeconomic shock to simulate sector re-ratings and stock ranking shifts:</p>
+        <div class="space-y-2">
+          <button onclick="triggerMacroScenario('rbi_cut')" class="w-full text-left p-2.5 rounded bg-terminal-surface hover:bg-slate-800 border border-terminal-border transition">
+            <div class="font-bold text-terminal-bull">1. RBI Executes Surprise 25 bps Rate Cut</div>
+            <div class="text-[11px] text-slate-400">Expands bank NIM cushions, reduces auto/infra borrowing costs.</div>
+          </button>
+          <button onclick="triggerMacroScenario('crude_spike')" class="w-full text-left p-2.5 rounded bg-terminal-surface hover:bg-slate-800 border border-terminal-border transition">
+            <div class="font-bold text-terminal-bear">2. Brent Crude Surges Past $95/bbl</div>
+            <div class="text-[11px] text-slate-400">Pressure on INR, margin contraction for specialty chemicals & paints.</div>
+          </button>
+          <button onclick="triggerMacroScenario('defense_pli')" class="w-full text-left p-2.5 rounded bg-terminal-surface hover:bg-slate-800 border border-terminal-border transition">
+            <div class="font-bold text-terminal-accent">3. Major National Capex & PLI Budget Allocation</div>
+            <div class="text-[11px] text-slate-400">Accelerates indigenous electronics, defense procurement, and capital goods.</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DCF & Intrinsic Value Quick Calculator Modal -->
+  <div id="dcf-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-terminal-card border border-terminal-border max-w-md w-full rounded-lg shadow-2xl overflow-hidden font-mono">
+      <div class="px-4 py-3 border-b border-terminal-border flex items-center justify-between bg-terminal-surface">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calculator" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Benjamin Graham Fair Value Calc</h3>
+        </div>
+        <button onclick="toggleModal('dcf-modal')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <div>
+          <label class="text-slate-400 block mb-1">Trailing 12-Month EPS (₹):</label>
+          <input type="number" id="calc-eps" value="45.0" oninput="runInlineCalc()" class="w-full bg-terminal-surface border border-terminal-border rounded p-2 text-white focus:outline-none focus:border-terminal-accent" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">Book Value Per Share - BVPS (₹):</label>
+          <input type="number" id="calc-bvps" value="280.0" oninput="runInlineCalc()" class="w-full bg-terminal-surface border border-terminal-border rounded p-2 text-white focus:outline-none focus:border-terminal-accent" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">Current Market Price (₹):</label>
+          <input type="number" id="calc-cmp" value="410.0" oninput="runInlineCalc()" class="w-full bg-terminal-surface border border-terminal-border rounded p-2 text-white focus:outline-none focus:border-terminal-accent" />
+        </div>
+        <div class="bg-terminal-surface p-3 rounded border border-terminal-border mt-3 space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Graham Number:</span>
+            <span id="calc-out-graham" class="font-bold text-white">₹532.4</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Margin of Safety (MoS):</span>
+            <span id="calc-out-mos" class="font-bold text-terminal-bull">+29.8%</span>
+          </div>
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">Graham Safety Test (P/E &times; P/B):</span>
+            <span id="calc-out-test" class="text-emerald-400">13.3 (Passed &le; 22.5)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Value Guardrails Concept Reference Modal -->
+  <div id="info-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-terminal-card border border-terminal-border max-w-xl w-full rounded-lg shadow-2xl overflow-hidden font-mono flex flex-col max-h-[90vh]">
+      <div class="px-4 py-3 border-b border-terminal-border flex items-center justify-between bg-terminal-surface">
+        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Value Investing Guardrails & SEBI Compliance</h3>
+        <button onclick="toggleModal('info-modal')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+      <div class="p-4 space-y-3 text-xs overflow-y-auto custom-scrollbar leading-relaxed">
+        <div class="border-l-2 border-terminal-accent pl-3">
+          <strong class="text-white">1. Graham Number:</strong>
+          <p class="text-slate-400">Calculated as &radic;(22.5 &times; EPS &times; BVPS). Benjamin Graham considered stocks trading below this multiple as protective against severe capital impairment.</p>
+        </div>
+        <div class="border-l-2 border-emerald-500 pl-3">
+          <strong class="text-white">2. Margin of Safety (MoS %):</strong>
+          <p class="text-slate-400">The percentage discount between current stock price and conservative intrinsic valuation. A 20% to 30% margin absorbs macro shocks and earnings surprises.</p>
+        </div>
+        <div class="border-l-2 border-amber-500 pl-3">
+          <strong class="text-white">3. Economic Moats:</strong>
+          <p class="text-slate-400">Pricing power, high switching costs, or scale economies that allow a business to sustain ROCE &gt; 18% over a complete economic cycle without dilution.</p>
+        </div>
+        <div class="border-l-2 border-rose-500 pl-3">
+          <strong class="text-white">SEBI Regulatory Notice:</strong>
+          <p class="text-slate-400">This terminal is an educational and analytical research decision-support tool. It does not provide personalized investment advice or SEBI-registered portfolio advisory services.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic & Data Pipeline -->
+  <script>
+    // State Store
+    let activeStrategy = 'all';
+    let activeSectorFilter = null;
+    let isLiveBackend = false;
+
+    // Sector Vector Data
+    let sectorTailwinds = [
+      { id: 'banking', name: 'Banking & NBFC', score: 78, driver: 'Clean credit books, stable NIMs' },
+      { id: 'infrastructure', name: 'Infrastructure', score: 92, driver: 'National capex & railway outlay' },
+      { id: 'electronics', name: 'Electronics / Defense', score: 94, driver: 'Domestic PLI & export localization' },
+      { id: 'auto', name: 'Automotive', score: 74, driver: 'Premiumization & raw material stability' },
+      { id: 'chemicals', name: 'Specialty Chemicals', score: 56, driver: 'Cheaper crude vs China dumping' },
+      { id: 'it', name: 'Information Tech', score: 48, driver: 'US corporate discretionary pause' },
+      { id: 'telecom', name: 'Telecom & Cloud', score: 82, driver: 'Tariff tailwinds & 5G monetization' },
+      { id: 'metals', name: 'Metals & Mining', score: 42, driver: 'Global steel capacity overhang' }
+    ];
+
+    // Curated Indian Macro Feed (Mock / Fallback)
+    let macroNews = [
+      {
+        id: 1,
+        type: 'monetary',
+        badge: 'BULLISH',
+        badgeColor: 'emerald',
+        title: 'RBI Monetary Policy: Benchmark Repo Held at 6.50%',
+        summary: 'RBI governor highlights core inflation moderation while focusing on systemic banking liquidity. Tailwind for corporate bond issuance.',
+        impact: 'Positive for Banks, Housing Finance, Capital Goods',
+        time: '1h ago'
+      },
+      {
+        id: 2,
+        type: 'fiscal',
+        badge: 'POLICY ACCELERATION',
+        badgeColor: 'sky',
+        title: 'Ministry of Finance Expedites Semiconductor & SMD Component PLI',
+        summary: 'Targeted capital subsidies cleared for domestic active/passive electronics manufacturing, boosting indigenous supply chain integration.',
+        impact: 'Direct tailwind for BEL, Electronics & Precision Engineering',
+        time: '3h ago'
+      },
+      {
+        id: 3,
+        type: 'monetary',
+        badge: 'COMMODITY',
+        badgeColor: 'amber',
+        title: 'Brent Crude Stabilizes at $78/bbl Amid OPEC+ Quota Discipline',
+        summary: 'Moderate crude reduces India import bill strain, keeping current account deficit in check and insulating paint & packaging raw materials.',
+        impact: 'Neutral to Bullish for Specialty Chemicals & Paints',
+        time: '6h ago'
+      },
+      {
+        id: 4,
+        type: 'fiscal',
+        badge: 'INFRA CAPEX',
+        badgeColor: 'emerald',
+        title: 'Dedicated Freight Corridors & High-Speed Rail Orders Disbursed',
+        summary: 'Record EPC order books booked across core civil engineering, signaling multi-quarter revenue visibility.',
+        impact: 'Strong catalyst for L&T and Industrial Equipment',
+        time: '8h ago'
+      }
+    ];
+
+    // Stock Universe Data (Mock / Fallback)
+    let stocks = [
+      {
+        ticker: 'LICI',
+        name: 'Life Insurance Corp of India',
+        sector: 'banking',
+        price: 980.0,
+        grahamNumber: 1340.0,
+        intrinsicDcf: 1420.0,
+        pe: 14.2,
+        medianPe: 18.0,
+        peg: 0.85,
+        roce: 18.2,
+        roe: 19.5,
+        fcfYield: 8.4,
+        piotroski: 8,
+        debtEquity: 0.0,
+        moat: 'Wide',
+        moatDesc: 'Dominant sovereign agency channel, unmatched distribution network with ~60% market share in First Year Premiums.',
+        synthesisScore: 88,
+        action: 'Strong Buy',
+        buyCatalyst: 'Trading at huge discount to embedded value with structural shift toward profitable non-par insurance products.',
+        sellTrigger: 'Loss of sovereign guarantee status or persistent private market share erosion >3% annually.'
+      },
+      {
+        ticker: 'LT',
+        name: 'Larsen & Toubro Ltd',
+        sector: 'infrastructure',
+        price: 3480.0,
+        grahamNumber: 3950.0,
+        intrinsicDcf: 4100.0,
+        pe: 28.5,
+        medianPe: 27.0,
+        peg: 1.15,
+        roce: 19.8,
+        roe: 16.5,
+        fcfYield: 4.8,
+        piotroski: 7,
+        debtEquity: 0.65,
+        moat: 'Wide',
+        moatDesc: 'Pivotal national contractor with massive balance sheet capability to execute multi-billion dollar EPC contracts across GCC and India.',
+        synthesisScore: 84,
+        action: 'Accumulate',
+        buyCatalyst: 'All-time high order backlog >₹4.8 Lakh Cr; heavy beneficiary of government transport & energy capex.',
+        sellTrigger: 'Private capex cycle slowdown or execution bottlenecks leading to margin degradation below 8%.'
+      },
+      {
+        ticker: 'BEL',
+        name: 'Bharat Electronics Ltd',
+        sector: 'electronics',
+        price: 285.0,
+        grahamNumber: 298.0,
+        intrinsicDcf: 330.0,
+        pe: 34.0,
+        medianPe: 26.0,
+        peg: 1.28,
+        roce: 32.5,
+        roe: 26.2,
+        fcfYield: 3.9,
+        piotroski: 9,
+        debtEquity: 0.0,
+        moat: 'Wide',
+        moatDesc: 'Sole domestic prime electronic warfare/radar partner for Indian Armed Forces; zero long-term debt.',
+        synthesisScore: 82,
+        action: 'Accumulate',
+        buyCatalyst: 'Indigenization defense lists, electronic warfare modernization orders, and pristine zero-debt balance sheet.',
+        sellTrigger: 'Valuation multiple exceeding 45x trailing earnings or defense outlay delays.'
+      },
+      {
+        ticker: 'TCS',
+        name: 'Tata Consultancy Services',
+        sector: 'it',
+        price: 4120.0,
+        grahamNumber: 4250.0,
+        intrinsicDcf: 4480.0,
+        pe: 27.2,
+        medianPe: 28.5,
+        peg: 2.1,
+        roce: 58.4,
+        roe: 51.0,
+        fcfYield: 4.2,
+        piotroski: 8,
+        debtEquity: 0.0,
+        moat: 'Wide',
+        moatDesc: 'Global enterprise software partner with legendary client retention and 25%+ operating margins.',
+        synthesisScore: 72,
+        action: 'Hold',
+        buyCatalyst: 'Generative AI migration architectures and large cost-optimization multi-year mega deals.',
+        sellTrigger: 'Persistent decline in North American enterprise discretionary BFSI budgets.'
+      },
+      {
+        ticker: 'TATACHEM',
+        name: 'Tata Chemicals Ltd',
+        sector: 'chemicals',
+        price: 940.0,
+        grahamNumber: 1210.0,
+        intrinsicDcf: 1280.0,
+        pe: 17.5,
+        medianPe: 19.2,
+        peg: 1.05,
+        roce: 9.8,
+        roe: 8.5,
+        fcfYield: 5.6,
+        piotroski: 6,
+        debtEquity: 0.35,
+        moat: 'Narrow',
+        moatDesc: 'Low-cost synthetic and natural soda ash operations across India, Kenya, and North America.',
+        synthesisScore: 79,
+        action: 'Strong Buy',
+        buyCatalyst: 'Cyclical trough in soda ash realizations approaching floor; deep discount to book value and replacement cost.',
+        sellTrigger: 'Prolonged Chinese soda ash dumping keeping realizations below operating cash flow breakeven.'
+      },
+      {
+        ticker: 'HDFCBANK',
+        name: 'HDFC Bank Ltd',
+        sector: 'banking',
+        price: 1640.0,
+        grahamNumber: 1920.0,
+        intrinsicDcf: 2100.0,
+        pe: 18.2,
+        medianPe: 21.5,
+        peg: 1.1,
+        roce: 16.8,
+        roe: 17.1,
+        fcfYield: 6.2,
+        piotroski: 7,
+        debtEquity: 0.8,
+        moat: 'Wide',
+        moatDesc: 'Unmatched branch density, low-cost CASA deposit franchise, and industry-leading NPA underwriting track record.',
+        synthesisScore: 86,
+        action: 'Strong Buy',
+        buyCatalyst: 'Merger digestion phase concluding; Loan-to-Deposit Ratio normalized; valuation at 10-year discount band.',
+        sellTrigger: 'Gross NPAs rising over 2.2% or prolonged compression of net interest margins.'
+      },
+      {
+        ticker: 'MARUTI',
+        name: 'Maruti Suzuki India Ltd',
+        sector: 'auto',
+        price: 12150.0,
+        grahamNumber: 12900.0,
+        intrinsicDcf: 13800.0,
+        pe: 26.4,
+        medianPe: 27.5,
+        peg: 1.3,
+        roce: 21.0,
+        roe: 17.8,
+        fcfYield: 4.1,
+        piotroski: 8,
+        debtEquity: 0.02,
+        moat: 'Wide',
+        moatDesc: 'Unmatched 40%+ passenger vehicle market share, tier-2/tier-3 service density, and fortress cash balance sheet.',
+        synthesisScore: 79,
+        action: 'Accumulate',
+        buyCatalyst: 'SUV mix expansion (Grand Vitara, Fronx, Brezza) driving ASP and operating margin expansion.',
+        sellTrigger: 'Loss of overall passenger vehicle market share below 38%.'
+      },
+      {
+        ticker: 'BHARTIARTL',
+        name: 'Bharti Airtel Ltd',
+        sector: 'telecom',
+        price: 1540.0,
+        grahamNumber: 1320.0,
+        intrinsicDcf: 1620.0,
+        pe: 45.0,
+        medianPe: 38.0,
+        peg: 1.6,
+        roce: 17.2,
+        roe: 18.4,
+        fcfYield: 4.8,
+        piotroski: 7,
+        debtEquity: 1.2,
+        moat: 'Wide',
+        moatDesc: 'Duopoly position in telecom, highest ARPU in India (₹220+), expanding enterprise Airtel Cloud business.',
+        synthesisScore: 76,
+        action: 'Hold',
+        buyCatalyst: 'Industry ARPU migration toward ₹250–₹300 and tapering of 5G Capex intensity unlocking huge free cash flow.',
+        sellTrigger: 'Price war resumption or delay in tariff hike cycles.'
+      },
+      {
+        ticker: 'TATASTEEL',
+        name: 'Tata Steel Ltd',
+        sector: 'metals',
+        price: 148.0,
+        grahamNumber: 142.0,
+        intrinsicDcf: 135.0,
+        pe: 38.0,
+        medianPe: 12.0,
+        peg: 3.2,
+        roce: 7.2,
+        roe: 5.4,
+        fcfYield: 1.8,
+        piotroski: 4,
+        debtEquity: 0.95,
+        moat: 'Narrow',
+        moatDesc: 'Integrated domestic iron ore mines providing cost advantage in India; UK operations restructuring.',
+        synthesisScore: 52,
+        action: 'Reduce / Sell',
+        buyCatalyst: 'Massive global stimulus or EU CBAM tariff relief.',
+        sellTrigger: 'European blast furnace cash bleed and weak international steel spreads.'
+      },
+      {
+        ticker: 'DEEPAKNTR',
+        name: 'Deepak Nitrite Ltd',
+        sector: 'chemicals',
+        price: 2680.0,
+        grahamNumber: 2950.0,
+        intrinsicDcf: 3200.0,
+        pe: 31.0,
+        medianPe: 29.0,
+        peg: 1.4,
+        roce: 24.5,
+        roe: 21.0,
+        fcfYield: 3.8,
+        piotroski: 8,
+        debtEquity: 0.05,
+        moat: 'Wide',
+        moatDesc: 'Cost leadership in sodium nitrite and phenolics; high switching costs for pharma/agrochemical intermediaries.',
+        synthesisScore: 81,
+        action: 'Accumulate',
+        buyCatalyst: 'Upstream backward integration and commissioning of polycarbonate/polycarbonate blends facility.',
+        sellTrigger: 'Dumping of Chinese phenol derivatives degrading operating margins below 12%.'
+      }
+    ];
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderSectorMatrix();
+      renderMacroFeed();
+      renderStockTable(stocks);
+      runInlineCalc();
+      fetchLiveData(); // Check if Python server.py is running
+    });
+
+    // Check & Fetch from Python FastAPI Backend
+    async function fetchLiveData() {
+      const pill = document.getElementById('backend-status-pill');
+      const text = document.getElementById('backend-status-text');
+      
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/stocks');
+        if (!res.ok) throw new Error();
+        const liveStocks = await res.json();
+        
+        // Merge live data with local metadata
+        liveStocks.forEach(live => {
+          const match = stocks.find(s => s.ticker === live.ticker);
+          if (match) {
+            match.price = live.price || match.price;
+            match.pe = live.pe || match.pe;
+            match.grahamNumber = live.grahamNumber || match.grahamNumber;
+            match.roe = live.roe || match.roe;
+            match.debtEquity = live.debtToEquity || match.debtEquity;
+          }
+        });
+
+        isLiveBackend = true;
+        pill.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px]';
+        text.innerText = 'Connected: Python Live Feed (Port 8000)';
+        applyFilters();
+      } catch (err) {
+        isLiveBackend = false;
+        pill.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px]';
+        text.innerText = 'Local Mock Mode (server.py offline)';
+      }
+    }
+
+    // Render Sector Matrix Cards
+    function renderSectorMatrix() {
+      const container = document.getElementById('sector-matrix-container');
+      container.innerHTML = sectorTailwinds.map(sec => {
+        const isSelected = activeSectorFilter === sec.id;
+        const color = sec.score >= 80 ? 'text-emerald-400 border-emerald-500/30' : sec.score >= 60 ? 'text-sky-400 border-sky-500/30' : 'text-rose-400 border-rose-500/30';
+        return `
+          <div onclick="selectSectorFilter('${sec.id}')" class="p-2.5 rounded border ${isSelected ? 'border-terminal-accent bg-sky-950/30' : 'border-terminal-border bg-terminal-surface'} cursor-pointer hover:border-slate-500 transition">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-mono font-bold text-xs text-slate-200">${sec.name}</span>
+              <span class="font-mono text-xs font-bold ${color}">${sec.score}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 truncate">${sec.driver}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Sector Filter Click
+    function selectSectorFilter(sectorId) {
+      if (activeSectorFilter === sectorId) {
+        activeSectorFilter = null;
+      } else {
+        activeSectorFilter = sectorId;
+      }
+      renderSectorMatrix();
+      applyFilters();
+    }
+
+    // Render Macro Feed
+    function renderMacroFeed(items = macroNews) {
+      const container = document.getElementById('macro-feed-list');
+      container.innerHTML = items.map(n => `
+        <div class="p-2.5 bg-terminal-surface rounded border border-terminal-border/80 hover:border-terminal-border transition space-y-1 font-mono">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] uppercase font-bold text-${n.badgeColor}-400 px-1 py-0.2 rounded bg-${n.badgeColor}-500/10 border border-${n.badgeColor}-500/20">
+              ${n.badge}
+            </span>
+            <span class="text-[10px] text-slate-500">${n.time}</span>
+          </div>
+          <h4 class="text-xs font-bold text-white font-sans">${n.title}</h4>
+          <p class="text-[11px] text-slate-400 font-sans leading-tight">${n.summary}</p>
+          <div class="text-[10px] text-terminal-accent pt-1 border-t border-terminal-border/40">
+            Vector: ${n.impact}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterFeed(type) {
+      if (type === 'all') {
+        renderMacroFeed(macroNews);
+      } else {
+        renderMacroFeed(macroNews.filter(n => n.type === type));
+      }
+    }
+
+    // Render Screener Table
+    function renderStockTable(list) {
+      const tbody = document.getElementById('stock-table-body');
+      document.getElementById('matching-stocks-count').innerText = list.length;
+      document.getElementById('total-stocks-count').innerText = stocks.length;
+      document.getElementById('active-ticker-count').innerText = `${list.length} Stocks Active`;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-6 text-center text-slate-500 font-mono text-xs">
+              No companies match this strict Value & Margin of Safety criteria. Try lowering the MoS filter.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(s => {
+        // Calculate Margin of Safety % vs Graham Number
+        const mosGraham = (((s.grahamNumber - s.price) / s.grahamNumber) * 100).toFixed(1);
+        const mosColor = mosGraham >= 25 ? 'text-emerald-400' : mosGraham >= 10 ? 'text-sky-400' : 'text-slate-400';
+        
+        const actionBadge = s.action === 'Strong Buy'
+          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+          : s.action === 'Accumulate'
+          ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+          : s.action === 'Hold'
+          ? 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+          : 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-2.5">
+              <div class="font-bold text-white flex items-center gap-1.5">
+                ${s.ticker}
+                <span class="text-[9px] px-1 py-0.2 rounded ${s.moat === 'Wide' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'} font-sans">
+                  ${s.moat} Moat
+                </span>
+              </div>
+              <div class="text-[10px] text-slate-400 font-sans truncate max-w-[150px]">${s.name}</div>
+            </td>
+            <td class="p-2.5 font-bold text-slate-200">₹${s.price.toLocaleString('en-IN')}</td>
+            <td class="p-2.5 text-slate-300">₹${s.grahamNumber.toLocaleString('en-IN')}</td>
+            <td class="p-2.5 font-bold ${mosColor}">${mosGraham > 0 ? '+' : ''}${mosGraham}%</td>
+            <td class="p-2.5">
+              <span class="${s.pe <= s.medianPe ? 'text-emerald-400' : 'text-amber-400'}">${s.pe}x</span>
+              <span class="text-[10px] text-slate-500"> / ${s.medianPe}x</span>
+            </td>
+            <td class="p-2.5">
+              <span class="text-white">${s.roce}%</span>
+              <span class="text-[10px] text-slate-400 block">${s.fcfYield}% FCF</span>
+            </td>
+            <td class="p-2.5">
+              <span class="px-1.5 py-0.5 rounded ${s.piotroski >= 8 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'} font-bold">
+                ${s.piotroski}/9
+              </span>
+            </td>
+            <td class="p-2.5">
+              <div class="flex items-center gap-1">
+                <span class="font-bold text-white">${s.synthesisScore}</span>
+                <div class="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-terminal-accent" style="width: ${s.synthesisScore}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="p-2.5 text-center">
+              <button onclick="openStockDetail('${s.ticker}')" class="px-2 py-1 rounded border ${actionBadge} text-[10px] font-bold hover:brightness-125 transition">
+                ${s.action}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Filter Logic
+    function applyFilters() {
+      const minMos = parseFloat(document.getElementById('filter-mos').value);
+      const moatFilter = document.getElementById('filter-moat').value;
+      const maxPeg = parseFloat(document.getElementById('filter-peg').value);
+      const minF = parseInt(document.getElementById('filter-piotroski').value);
+      const search = document.getElementById('filter-search').value.toLowerCase();
+
+      let filtered = stocks.filter(s => {
+        // MoS vs Graham Calc
+        const mos = ((s.grahamNumber - s.price) / s.grahamNumber) * 100;
+        if (minMos > 0 && mos < minMos) return false;
+
+        // Moat
+        if (moatFilter === 'Wide' && s.moat !== 'Wide') return false;
+        if (moatFilter === 'Narrow' && s.moat === 'None') return false;
+
+        // PEG
+        if (s.peg > maxPeg) return false;
+
+        // Piotroski
+        if (s.piotroski < minF) return false;
+
+        // Sector Matrix Click
+        if (activeSectorFilter && s.sector !== activeSectorFilter) return false;
+
+        // Strategy Presets
+        if (activeStrategy === 'graham' && (mos < 20 || (s.pe * (s.price / (s.grahamNumber**2 / (22.5 * s.pe)))) > 25)) return false;
+        if (activeStrategy === 'buffett' && (s.moat !== 'Wide' || s.roce < 20)) return false;
+        if (activeStrategy === 'garp' && (s.peg > 1.3 || s.roce < 18)) return false;
+        if (activeStrategy === 'deepvalue' && mos < 25) return false;
+
+        // Search text
+        if (search) {
+          const match = s.ticker.toLowerCase().includes(search) || s.name.toLowerCase().includes(search) || s.moatDesc.toLowerCase().includes(search);
+          if (!match) return false;
+        }
+
+        return true;
+      });
+
+      renderStockTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-mos').value = '0';
+      document.getElementById('filter-moat').value = 'all';
+      document.getElementById('filter-peg').value = '999';
+      document.getElementById('filter-piotroski').value = '0';
+      document.getElementById('filter-search').value = '';
+      activeSectorFilter = null;
+      activeStrategy = 'all';
+      updateStrategyButtons();
+      renderSectorMatrix();
+      applyFilters();
+    }
+
+    // Value Philosophy Strategy Switcher
+    function setStrategy(strat) {
+      activeStrategy = strat;
+      updateStrategyButtons();
+      applyFilters();
+    }
+
+    function updateStrategyButtons() {
+      document.querySelectorAll('.strat-btn').forEach(btn => {
+        btn.classList.remove('border-terminal-accent', 'text-white', 'bg-sky-950/40');
+      });
+      const activeBtn = document.getElementById(`btn-strat-${activeStrategy}`);
+      if (activeBtn) {
+        activeBtn.classList.add('border-terminal-accent', 'text-white', 'bg-sky-950/40');
+      }
+    }
+
+    // Modal Details Opener
+    function openStockDetail(ticker) {
+      const s = stocks.find(item => item.ticker === ticker);
+      if (!s) return;
+
+      const mosGraham = (((s.grahamNumber - s.price) / s.grahamNumber) * 100).toFixed(1);
+
+      document.getElementById('modal-company-title').innerText = `${s.ticker} // ${s.name}`;
+      document.getElementById('modal-company-sub').innerText = `Sector: ${s.sector.toUpperCase()} • Economic Moat: ${s.moat}`;
+      document.getElementById('modal-mos-val').innerText = `${mosGraham > 0 ? '+' : ''}${mosGraham}%`;
+      document.getElementById('modal-piotroski-val').innerText = `${s.piotroski} / 9`;
+      document.getElementById('modal-fcf-val').innerText = `${s.fcfYield}%`;
+
+      document.getElementById('modal-cmp').innerText = `₹${s.price.toLocaleString('en-IN')}`;
+      document.getElementById('modal-graham').innerText = `₹${s.grahamNumber.toLocaleString('en-IN')}`;
+      document.getElementById('modal-dcf').innerText = `₹${s.intrinsicDcf.toLocaleString('en-IN')}`;
+      document.getElementById('modal-median-pe').innerText = `${s.medianPe}x (Current: ${s.pe}x)`;
+
+      document.getElementById('modal-buy-catalyst').innerText = s.buyCatalyst;
+      document.getElementById('modal-sell-trigger').innerText = s.sellTrigger;
+      document.getElementById('modal-moat-desc').innerText = s.moatDesc;
+
+      toggleModal('detail-modal');
+    }
+
+    // Generic Modal Toggle
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    // Macro Shock Simulation Event Handler
+    function triggerMacroScenario(type) {
+      if (type === 'rbi_cut') {
+        sectorTailwinds.find(s => s.id === 'banking').score += 6;
+        sectorTailwinds.find(s => s.id === 'infrastructure').score += 4;
+        stocks.find(s => s.ticker === 'HDFCBANK').synthesisScore += 4;
+        macroNews.unshift({
+          id: Date.now(),
+          type: 'monetary',
+          badge: 'SIMULATED SHOCK',
+          badgeColor: 'emerald',
+          title: 'INJECTED: RBI 25 bps Rate Cut Initiated',
+          summary: 'Benchmark repo dropped to 6.25%. Cost of capital declines, driving upward DCF revisions.',
+          impact: 'Re-rating tailwind for Banking, Real Estate, and Infrastructure',
+          time: 'Just now'
+        });
+      } else if (type === 'crude_spike') {
+        sectorTailwinds.find(s => s.id === 'chemicals').score -= 12;
+        stocks.find(s => s.ticker === 'TATACHEM').synthesisScore -= 6;
+        macroNews.unshift({
+          id: Date.now(),
+          type: 'monetary',
+          badge: 'SIMULATED SHOCK',
+          badgeColor: 'rose',
+          title: 'INJECTED: Brent Crude Surges to $98/bbl',
+          summary: 'Input raw material inflation shocks margins across downstream chemical derivatives.',
+          impact: 'Headwind for specialty chemicals and paints',
+          time: 'Just now'
+        });
+      } else if (type === 'defense_pli') {
+        sectorTailwinds.find(s => s.id === 'electronics').score = 99;
+        stocks.find(s => s.ticker === 'BEL').synthesisScore = 91;
+        macroNews.unshift({
+          id: Date.now(),
+          type: 'fiscal',
+          badge: 'SIMULATED SHOCK',
+          badgeColor: 'sky',
+          title: 'INJECTED: ₹35,000 Cr Additional Electronic PLI Cleared',
+          summary: 'Accelerated disbursement pipeline for indigenous defense and aerospace sub-assemblies.',
+          impact: 'Surge in high-margin order books for BEL',
+          time: 'Just now'
+        });
+      }
+
+      renderSectorMatrix();
+      renderMacroFeed();
+      applyFilters();
+      toggleModal('scenario-modal');
+    }
+
+    // Benjamin Graham Calculator Inline
+    function runInlineCalc() {
+      const eps = parseFloat(document.getElementById('calc-eps').value) || 0;
+      const bvps = parseFloat(document.getElementById('calc-bvps').value) || 0;
+      const cmp = parseFloat(document.getElementById('calc-cmp').value) || 0;
+
+      if (eps <= 0 || bvps <= 0 || cmp <= 0) return;
+
+      const graham = Math.sqrt(22.5 * eps * bvps);
+      const mos = ((graham - cmp) / graham) * 100;
+      const pe = cmp / eps;
+      const pb = cmp / bvps;
+      const test = pe * pb;
+
+      document.getElementById('calc-out-graham').innerText = `₹${graham.toFixed(1)}`;
+      document.getElementById('calc-out-mos').innerText = `${mos > 0 ? '+' : ''}${mos.toFixed(1)}%`;
+      document.getElementById('calc-out-mos').className = `font-bold ${mos >= 20 ? 'text-terminal-bull' : 'text-slate-300'}`;
+      document.getElementById('calc-out-test').innerText = `${test.toFixed(1)} (${test <= 22.5 ? 'Passed &le; 22.5' : 'Failed > 22.5'})`;
+      document.getElementById('calc-out-test').className = test <= 22.5 ? 'text-emerald-400' : 'text-rose-400';
+    }
+  </script>
+</body>
+</html>
